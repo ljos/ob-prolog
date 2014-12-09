@@ -53,55 +53,12 @@
                 (car pair) (org-babel-prolog-var-to-prolog (cdr pair))))
       vars "\n") "\n" body "\n")))
 
-;; This is the main function which is called to evaluate a code
-;; block.
-;;
-;; This function will evaluate the body of the source code and
-;; return the results as emacs-lisp depending on the value of the
-;; :results header argument
-;; - output means that the output to STDOUT will be captured and
-;;   returned
-;; - value means that the value of the last statement in the
-;;   source code block will be returned
-;;
-;; The most common first step in this function is the expansion of the
-;; PARAMS argument using `org-babel-process-params'.
-;;
-;; Please feel free to not implement options which aren't appropriate
-;; for your language (e.g. not all languages support interactive
-;; "session" evaluation).  Also you are free to define any new header
-;; arguments which you feel may be useful -- all header arguments
-;; specified by the user will be available in the PARAMS variable.
 (defun org-babel-execute:prolog (body params)
   "Execute a block of Prolog code with org-babel.  This function is
 called by `org-babel-execute-src-block'"
   (message "executing Prolog source code block")
   (let* ((processed-params (org-babel-process-params params))
-         ;; ;; set the session if the session variable is non-nil
-         ;; (session (org-babel-prolog-initiate-session (first processed-params)))
-         ;; ;; variables assigned for use in the block
-         ;; (vars (second processed-params))
-         ;; (result-params (third processed-params))
-         ;; ;; either OUTPUT or VALUE which should behave as described above
-         ;; (result-type (fourth processed-params))
-         ;; ;; expand the body with `org-babel-expand-body:prolog'
-         ;; (full-body (org-babel-expand-body:prolog
-         ;;             body params processed-params))
          (in-file (org-babel-temp-file "prolog-")))
-    ;; actually execute the source-code block either in a session or
-    ;; possibly by dropping it to a temporary file and evaluating the
-    ;; file.
-    ;;
-    ;; for session based evaluation the functions defined in
-    ;; `org-babel-comint' will probably be helpful.
-    ;;
-    ;; for external evaluation the functions defined in
-    ;; `org-babel-eval' will probably be helpful.
-    ;;
-    ;; when forming a shell command, or a fragment of code in some
-    ;; other language, please preprocess any file names involved with
-    ;; the function `org-babel-process-file-name'. (See the way that
-    ;; function is used in the language files)
     (with-temp-file in-file
       (insert body))
     (org-babel-eval (format "swipl -l %s -g %s"
