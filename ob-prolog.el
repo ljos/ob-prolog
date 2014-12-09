@@ -43,9 +43,6 @@
 (defvar org-babel-default-header-args:prolog
   '((:goal nil)))
 
-;; This function expands the body of a source code block by doing
-;; things like prepending argument definitions to the body, it should
-;; be called by the `org-babel-execute:prolog' function below.
 (defun org-babel-expand-body:prolog (body params &optional processed-params)
   "Expand BODY according to PARAMS, return the expanded body."
   (let ((vars (nth 1 (or processed-params (org-babel-process-params params)))))
