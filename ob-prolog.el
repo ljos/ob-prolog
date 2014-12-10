@@ -41,53 +41,84 @@
 (add-to-list 'org-babel-tangle-lang-exts '("prolog" . "pl"))
 
 (defvar org-babel-default-header-args:prolog
-  '((:goal nil)))
-
-(defun org-babel-expand-body:prolog (body params &optional processed-params)
-  "Expand BODY according to PARAMS, return the expanded body."
-  (let ((vars (nth 1 (or processed-params (org-babel-process-params params)))))
-    (concat
-     (mapconcat ;; define any variables
-      (lambda (pair)
-        (format "%s=%S"
-                (car pair) (org-babel-prolog-var-to-prolog (cdr pair))))
-      vars "\n") "\n" body "\n")))
+  `((:goal   . nil)
+    (:system . ,prolog-system)))
 
 (defun org-babel-execute:prolog (body params)
   "Execute a block of Prolog code with org-babel.  This function is
 called by `org-babel-execute-src-block'"
   (message "executing Prolog source code block")
-  (let* ((processed-params (org-babel-process-params params))
-         (in-file (org-babel-temp-file "prolog-")))
-    (with-temp-file in-file
-      (insert body))
-    (org-babel-eval (format "swipl -l %s -g %s"
-                            (org-babel-process-file-name in-file)
-                            (cdr (assoc :goal processed-params)))
-                    ""))
-  )
+  (let* ((params (org-babel-process-params params))
+         (system "swipl")
+         (session (cdr (assoc :session params)))
+         (goal (cdr (assoc :goal params))))
+    (if (string= "none" session)
+        (org-babel-prolog-evaluate system goal body)
+      (org-babel-prolog-evaluate-session system session goal body))))
 
-;; This function should be used to assign any variables in params in
-;; the context of the session environment.
-(defun org-babel-prep-session:prolog (session params)
-  "Prepare SESSION according to the header arguments specified in PARAMS."
-  )
+(defun org-babel-load-session:prolog (session body params)
+  "Load BODY into SESSION."
+  (let* ((params (org-babel-process-params params))
+         (session (org-babel-prolog-initiate-session
+                   (cdr (assoc :system params))
+                   (cdr (assoc :session session)))))
+    (org-babel-prolog-initiate-session session system)))
 
-(defun org-babel-prolog-var-to-prolog (var)
-  "Convert an elisp var into a string of prolog source code
-specifying a var of the same value."
-  (format "%S" var))
 
-(defun org-babel-prolog-table-or-string (results)
-  "If the results look like a table, then convert them into an
-Emacs-lisp table, otherwise return the results as a string."
-  )
+(defun org-babel-prolog-evaluate-external-process (system goal body)
+  (let* ((tmp-file (org-babel-temp-file "prolog-"))
+         (command (concat (format "%s -q -l %s" system tmp-file)
+                          (when goal (concat " -t " goal)))))
+    (write-region (org-babel-chomp body) nil tmp-file nil 'no-message)
+    (with-temp-buffer
+      (call-process-shell-command command nil t)
+      (buffer-string))))
 
-(defun org-babel-prolog-initiate-session (&optional session)
+(defun org-babel-prolog-evaluate-session (system session goal body)
+  (let* ((tmp-file (org-babel-temp-file "prolog-"))
+         (session (org-babel-prolog-initiate-session system session))
+         (prolog-system system)
+         (command (prolog-build-prolog-command nil tmp-file tmp-file))
+         (body (org-babel-chomp body)))
+    (write-region body nil tmp-file nil 'no-message)
+    (org-babel-comint-with-output (session "org-babel-prolog-eoe")
+      (insert command)
+      (comint-send-input)
+      (when goal
+        (insert (concat goal ",!.\n"))
+        (comint-send-input))
+      (insert "write('org-babel-prolog-eoe').\n")
+      (comint-send-input))
+    ;; (with-current-buffer session
+    ;;   (let ((process (get-process "prolog")))
+    ;;     (with-current-buffer (process-buffer process)
+    ;;       (goto-char (process-mark process))
+    ;;       (insert command)
+    ;;       (process-send-string process command)
+    ;;       (when goal
+    ;;         (let ((goal (concat goal ",!.\n")))
+    ;;           (insert goal)
+    ;;           (process-send-string process goal)))
+    ;;       (set-marker (process-mark process) (point))
+    ;;       (goto-char (process-mark process)))))
+    ))
+
+(defun org-babel-prolog-initiate-session (system &optional session)
   "If there is not a current inferior-process-buffer in SESSION
 then create.  Return the initialized session."
   (unless (string= session "none")
-    ))
+    (let ((session (get-buffer-create (or session "*prolog*"))))
+      (unless (comint-check-proc session)
+        (with-current-buffer session
+          (prolog-inferior-mode)
+          (unless (comint-check-proc session)
+            (apply 'make-comint-in-buffer
+                   "prolog"
+                   (current-buffer)
+                   (prolog-program-name)
+                   nil
+                   (prolog-program-switches)))))
+      session)))
 
 (provide 'ob-prolog)
 ;;; ob-prolog.el ends here
