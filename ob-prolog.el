@@ -81,27 +81,15 @@ called by `org-babel-execute-src-block'"
          (command (prolog-build-prolog-command nil tmp-file tmp-file))
          (body (org-babel-chomp body)))
     (write-region body nil tmp-file nil 'no-message)
-    (org-babel-comint-with-output (session "org-babel-prolog-eoe")
-      (insert command)
-      (comint-send-input)
-      (when goal
-        (insert (concat goal ",!.\n"))
-        (comint-send-input))
-      (insert "write('org-babel-prolog-eoe').\n")
-      (comint-send-input))
-    ;; (with-current-buffer session
-    ;;   (let ((process (get-process "prolog")))
-    ;;     (with-current-buffer (process-buffer process)
-    ;;       (goto-char (process-mark process))
-    ;;       (insert command)
-    ;;       (process-send-string process command)
-    ;;       (when goal
-    ;;         (let ((goal (concat goal ",!.\n")))
-    ;;           (insert goal)
-    ;;           (process-send-string process goal)))
-    ;;       (set-marker (process-mark process) (point))
-    ;;       (goto-char (process-mark process)))))
-    ))
+    (apply #'concat
+           (cl-concatenate 'list
+                           (org-babel-comint-with-output (session "\n\n")
+                             (insert (org-babel-chomp command))
+                             (comint-send-input nil t))
+                           (when goal
+                             (org-babel-comint-with-output (session "\n\n")
+                               (insert (concat goal ",!."))
+                               (comint-send-input nil t)))))))
 
 (defun org-babel-prolog-initiate-session (system &optional session)
   "If there is not a current inferior-process-buffer in SESSION
