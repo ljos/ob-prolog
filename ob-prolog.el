@@ -44,6 +44,8 @@
   `((:goal   . nil)
     (:system . ,(or prolog-system "swipl"))))
 
+(defvar-local org-babel-prolog--temp-file nil)
+
 (defun org-babel-expand-body:prolog (body params))
 
 (defun org-babel-variable-assignments:prolog (params))
@@ -80,8 +82,8 @@ called by `org-babel-execute-src-block'"
       (buffer-string))))
 
 (defun org-babel-prolog-evaluate-session (system session goal body)
-  (let* ((tmp-file (org-babel-temp-file "prolog-"))
-         (session (org-babel-prolog-initiate-session system session))
+  (let* ((session (org-babel-prolog-initiate-session system session))
+         (tmp-file (buffer-local-value 'org-babel-prolog--temp-file session))
          (prolog-system system)
          (command (prolog-build-prolog-command nil tmp-file tmp-file))
          (body (org-babel-chomp body)))
@@ -112,6 +114,8 @@ then create.  Return the initialized session."
       (unless (comint-check-proc session)
         (with-current-buffer session
           (prolog-inferior-mode)
+          (setq org-babel-prolog--temp-file
+                (org-babel-temp-file "prolog-" "-session"))
           (unless (comint-check-proc session)
             (apply 'make-comint-in-buffer
                    "prolog"
