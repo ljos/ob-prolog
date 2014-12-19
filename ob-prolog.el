@@ -48,8 +48,6 @@
 
 (defun org-babel-variable-assignments:prolog (params))
 
-(defun org-babel-load-session:prolog (session body params))
-
 
 (defun org-babel-execute:prolog (body params)
   "Execute a block of Prolog code with org-babel.  This function is
