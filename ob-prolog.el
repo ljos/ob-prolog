@@ -60,7 +60,7 @@ called by `org-babel-execute-src-block'"
          (session (cdr (assoc :session params)))
          (goal    (cdr (assoc :goal params))))
     (if (string= "none" session)
-        (org-babel-prolog-evaluate system goal body)
+        (org-babel-prolog-evaluate-external-process system goal body)
       (org-babel-prolog-evaluate-session system session goal body))))
 
 (defun org-babel-load-session:prolog (session body params)
@@ -86,17 +86,26 @@ called by `org-babel-execute-src-block'"
          (session (org-babel-prolog-initiate-session system session))
          (prolog-system system)
          (command (prolog-build-prolog-command nil tmp-file tmp-file))
-         (body (org-babel-chomp body)))
+         (body (org-babel-chomp body))
+         (ansi-color-for-comint-mode t))
     (write-region body nil tmp-file nil 'no-message)
-    (apply #'concat
-           (cl-concatenate 'list
-                           (org-babel-comint-with-output (session "\n\n")
-                             (insert (org-babel-chomp command))
-                             (comint-send-input nil t))
-                           (when goal
-                             (org-babel-comint-with-output (session "\n\n")
-                               (insert (concat goal ",!."))
-                               (comint-send-input nil t)))))))
+    (org-babel-trim
+     (with-temp-buffer
+       (apply #'insert
+              (org-babel-comint-with-output (session "\n\n" t)
+                (insert (org-babel-chomp command))
+                (comint-send-input nil t)))
+       (goto-char (point-max))
+       (when (and goal (search-backward "true." nil t))
+         (kill-whole-line)
+         (apply #'insert
+                (org-babel-comint-with-output (session "\n\n")
+                  (insert (concat goal ",!."))
+                  (comint-send-input nil t))))
+       (let ((delete-trailing-lines t))
+         (delete-trailing-whitespace (point-min)))
+       (ansi-color-apply
+        (buffer-string))))))
 
 (defun org-babel-prolog-initiate-session (system &optional session)
   "If there is not a current inferior-process-buffer in SESSION
@@ -112,7 +121,7 @@ then create.  Return the initialized session."
                    (current-buffer)
                    (prolog-program-name)
                    nil
-                   (prolog-program-switches)))))
+                   (cons "-q" (prolog-program-switches))))))
       session)))
 
 (provide 'ob-prolog)
