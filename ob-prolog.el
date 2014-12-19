@@ -1,12 +1,12 @@
-;;; ob-prolog.el --- org-babel functions for prolog evaluation
+;;; ob-prolog.el --- org-babel functions for prolog evaluation.
 
 ;; Copyright (C) Bjarte Johansen
 
 ;; Author: Bjarte Johansen
-;; Keywords: literate programming, reproducible research
 ;; Version: 0.0.1
+;; Keywords: literate programming, reproducible research
 
-;;; License:
+;; This file is NOT part of GNU Emacs.
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 
 ;;; Commentary:
 
+;; Org-babel support for prolog.
 
 ;;; Requirements:
 
@@ -37,21 +38,27 @@
 (require 'ob-eval)
 (require 'prolog)
 
-;; The usual file extension for prolog is "pl".
 (add-to-list 'org-babel-tangle-lang-exts '("prolog" . "pl"))
 
 (defvar org-babel-default-header-args:prolog
   `((:goal   . nil)
-    (:system . ,prolog-system)))
+    (:system . ,(or prolog-system "swipl"))))
+
+(defun org-babel-expand-body:prolog (body params))
+
+(defun org-babel-variable-assignments:prolog (params))
+
+(defun org-babel-load-session:prolog (session body params))
+
 
 (defun org-babel-execute:prolog (body params)
   "Execute a block of Prolog code with org-babel.  This function is
 called by `org-babel-execute-src-block'"
   (message "executing Prolog source code block")
   (let* ((params (org-babel-process-params params))
-         (system "swipl")
+         (system  (cdr (assoc :system params)))
          (session (cdr (assoc :session params)))
-         (goal (cdr (assoc :goal params))))
+         (goal    (cdr (assoc :goal params))))
     (if (string= "none" session)
         (org-babel-prolog-evaluate system goal body)
       (org-babel-prolog-evaluate-session system session goal body))))
