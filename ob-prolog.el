@@ -84,8 +84,7 @@ called by `org-babel-execute-src-block'"
          (session (org-babel-prolog-initiate-session system session))
          (prolog-system system)
          (command (prolog-build-prolog-command nil tmp-file tmp-file))
-         (body (org-babel-chomp body))
-         (ansi-color-for-comint-mode t))
+         (body (org-babel-chomp body)))
     (write-region body nil tmp-file nil 'no-message)
     (org-babel-trim
      (with-temp-buffer
