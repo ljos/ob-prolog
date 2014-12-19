@@ -1,0 +1,8 @@
+#+TITLE: Tests for ob-prolog
+
+
+* Simple tests
+
+  #+BEGIN_SRC prolog :goal main(A) :session *prolog-1*
+    main(A) :- A is 5.
+  #+END_SRC
