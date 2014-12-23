@@ -44,8 +44,6 @@
   `((:goal   . nil)
     (:system . ,(or prolog-system "swipl"))))
 
-(defvar-local org-babel-prolog--temp-file nil)
-
 (defun org-babel-expand-body:prolog (body params))
 
 (defun org-babel-variable-assignments:prolog (params))
@@ -82,29 +80,39 @@ called by `org-babel-execute-src-block'"
       (buffer-string))))
 
 (defun org-babel-prolog-evaluate-session (system session goal body)
+  "Evaluates the GOAL in the BODY of the prolog block in the
+given SESSION with SYSTEM. If there is no SESSION it creates it."
   (let* ((session (org-babel-prolog-initiate-session system session))
-         (tmp-file (buffer-local-value 'org-babel-prolog--temp-file session))
-         (prolog-system system)
-         (command (prolog-build-prolog-command nil tmp-file tmp-file))
-         (body (org-babel-chomp body)))
-    (write-region body nil tmp-file nil 'no-message)
+         (body (org-babel-trim body)))
     (org-babel-trim
      (with-temp-buffer
+       (with-current-buffer session
+           (setq comint-prompt-regexp "^|: *"))
+       (org-babel-comint-input-command session "consult(user).\n")
        (apply #'insert
-              (org-babel-comint-with-output (session "\n\n" t)
-                (insert (org-babel-chomp command))
-                (comint-send-input nil t)))
+              (org-babel-comint-with-output (session "\n")
+                (setq comint-prompt-regexp (prolog-prompt-regexp))
+                (insert body)
+                (comint-send-input nil t)
+                (comint-send-eof)))
        (goto-char (point-max))
-       (when (and goal (search-backward "true." nil t))
-         (kill-whole-line)
-         (apply #'insert
-                (org-babel-comint-with-output (session "\n\n")
-                  (insert (concat goal ",!."))
-                  (comint-send-input nil t))))
-       (let ((delete-trailing-lines t))
-         (delete-trailing-whitespace (point-min)))
-       (ansi-color-apply
-        (buffer-string))))))
+       (if (save-excursion
+             (search-backward "ERROR: " nil t))
+           (org-babel-eval-error-notify -1 (ansi-color-apply
+                                            (buffer-string)))
+         (when goal
+           (kill-region (point-min) (point-max))
+           (apply #'insert
+                  (org-babel-comint-with-output (session "\n")
+                    (insert (concat goal ", !."))
+                    (comint-send-input nil t))))
+         (ansi-color-apply-on-region (point-min) (point-max))
+         (if (save-excursion
+               (search-backward "ERROR: " nil t))
+             (org-babel-eval-error-notify -1 (buffer-string))
+           (let ((delete-trailing-lines t))
+             (delete-trailing-whitespace (point-min)))
+           (buffer-string)))))))
 
 (defun org-babel-prolog-initiate-session (system &optional session)
   "If there is not a current inferior-process-buffer in SESSION
@@ -113,16 +121,17 @@ then create.  Return the initialized session."
     (let ((session (get-buffer-create (or session "*prolog*"))))
       (unless (comint-check-proc session)
         (with-current-buffer session
+          (kill-region (point-min) (point-max))
           (prolog-inferior-mode)
-          (setq org-babel-prolog--temp-file
-                (org-babel-temp-file "prolog-" "-session"))
+          (setq prolog-program-name system)
           (unless (comint-check-proc session)
             (apply 'make-comint-in-buffer
                    "prolog"
                    (current-buffer)
                    (prolog-program-name)
                    nil
-                   (cons "-q" (prolog-program-switches))))))
+                   (cons "-q" (prolog-program-switches))))
+          (sit-for 0.1)))
       session)))
 
 (provide 'ob-prolog)
