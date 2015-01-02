@@ -8,14 +8,12 @@
     p(A) :- A is 3.
   #+END_SRC
 
+  #+RESULTS:
+  : A = D, D = 5.
+
   #+BEGIN_SRC prolog :goal other(A) :session *prolog-1*
     other(A) :- A is 3.
   #+END_SRC
 
-
-  #+BEGIN_SRC prolog
-    :- redefine_system_predicate(
-               system:'$dwim_correct_goal'(_,_,_)),
-       '$set_predicate_attribute'(system:'$dwim_correct_goal'/3, dynamic, 1),
-       asserta((system:'$dwim_correct_goal'(M:G,_,M:G))).
-  #+END_SRC
+  #+RESULTS:
+  : A = 3.
