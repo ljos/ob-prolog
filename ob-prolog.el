@@ -66,7 +66,6 @@
                           strs)
                ".\n")))))
 
-
 (defun org-babel-execute:prolog (body params)
   "Execute a block of Prolog code with org-babel.  This function is
 called by `org-babel-execute-src-block'"
@@ -88,7 +87,6 @@ called by `org-babel-execute-src-block'"
                    (cdr (assoc :system params))
                    (cdr (assoc :session session)))))
     (org-babel-prolog-initiate-session session system)))
-
 
 (defun org-babel-prolog-evaluate-external-process (system goal body)
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
