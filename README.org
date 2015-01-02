@@ -1,0 +1,4 @@
+#+TITLE: Org-babel functions for prolog evaluation
+
+This project contains a set of functions that are need to evaluate
+prolog in org-babel.
