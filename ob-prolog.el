@@ -114,6 +114,11 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
              (delete-trailing-whitespace (point-min)))
            (buffer-string)))))))
 
+(defun org-babel-prolog--answer-correction (string)
+  (when (string-match-p "Correct to: \".*\"\\?" string)
+    (insert "no")
+    (comint-send-input nil t)))
+
 (defun org-babel-prolog-initiate-session (system &optional session)
   "If there is not a current inferior-process-buffer in SESSION
 then create.  Return the initialized session."
@@ -130,6 +135,9 @@ then create.  Return the initialized session."
                  (prolog-program-name)
                  nil
                  (cons "-q" (prolog-program-switches)))
+          (add-hook 'comint-output-filter-functions
+                    'org-babel-prolog--answer-correction
+                    nil t)
           (while (progn
                    (goto-char comint-last-input-end)
                    (not (save-excursion
