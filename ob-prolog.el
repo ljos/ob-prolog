@@ -163,7 +163,8 @@ then create.  Return the initialized session."
                    (goto-char comint-last-input-end)
                    (not (save-excursion
                           (re-search-forward comint-prompt-regexp nil t))))
-            (accept-process-output (get-buffer-process (current-buffer))))))
+            (accept-process-output
+             (get-buffer-process session)))))
       session)))
 
 (provide 'ob-prolog)
