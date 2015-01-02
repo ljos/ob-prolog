@@ -105,7 +105,7 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
     (org-babel-trim
      (with-temp-buffer
        (with-current-buffer session
-           (setq comint-prompt-regexp "^|: *"))
+         (setq comint-prompt-regexp "^|: *"))
        (org-babel-comint-input-command session "consult(user).\n")
        (apply #'insert
               (org-babel-comint-with-output (session "\n")
