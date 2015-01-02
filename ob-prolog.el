@@ -103,7 +103,7 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
          (when goal
            (kill-region (point-min) (point-max))
            (apply #'insert
-                  (org-babel-comint-with-output (session "\n")
+                  (org-babel-comint-with-output (session "")
                     (insert (concat goal ", !."))
                     (comint-send-input nil t))))
          (ansi-color-apply-on-region (point-min) (point-max))
@@ -117,6 +117,11 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
 (defun org-babel-prolog--answer-correction (string)
   (when (string-match-p "Correct to: \".*\"\\?" string)
     (insert "no")
+    (comint-send-input nil t)))
+
+(defun org-babel-prolog--exit-debug (string)
+  (when (string-match-p "\\(.\\|\n\\)*Exception.* \\? $" string)
+    (insert "no debug")
     (comint-send-input nil t)))
 
 (defun org-babel-prolog-initiate-session (system &optional session)
@@ -137,6 +142,9 @@ then create.  Return the initialized session."
                  (cons "-q" (prolog-program-switches)))
           (add-hook 'comint-output-filter-functions
                     'org-babel-prolog--answer-correction
+                    nil t)
+          (add-hook 'comint-output-filter-functions
+                    'org-babel-prolog--exit-debug
                     nil t)
           (while (progn
                    (goto-char comint-last-input-end)
