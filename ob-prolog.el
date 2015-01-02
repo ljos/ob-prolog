@@ -83,7 +83,7 @@ called by `org-babel-execute-src-block'"
   "Evaluates the GOAL in the BODY of the prolog block in the
 given SESSION with SYSTEM. If there is no SESSION it creates it."
   (let* ((session (org-babel-prolog-initiate-session system session))
-         (body (org-babel-trim body)))
+         (body (split-string (org-babel-trim body) "\n")))
     (org-babel-trim
      (with-temp-buffer
        (with-current-buffer session
@@ -92,8 +92,12 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
        (apply #'insert
               (org-babel-comint-with-output (session "\n")
                 (setq comint-prompt-regexp (prolog-prompt-regexp))
-                (insert body)
-                (comint-send-input nil t)
+                (while body
+                  (insert (car body))
+                  (comint-send-input nil t)
+                  (accept-process-output
+                   (get-buffer-process session))
+                  (setq body (cdr body)))
                 (comint-send-eof)))
        (goto-char (point-max))
        (if (save-excursion
