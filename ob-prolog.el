@@ -99,11 +99,18 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
                    (get-buffer-process session))
                   (setq body (cdr body)))
                 (comint-send-eof)))
+       (ansi-color-apply-on-region (point-min) (point-max))
        (goto-char (point-max))
        (if (save-excursion
              (search-backward "ERROR: " nil t))
-           (org-babel-eval-error-notify -1 (ansi-color-apply
-                                            (buffer-string)))
+           (progn
+             (save-excursion
+               (while (search-backward "|: " nil t)
+                 (replace-match "" nil t)))
+             (search-backward "true." nil t)
+             (kill-whole-line)
+             (org-babel-eval-error-notify -1 (buffer-string))
+             (buffer-string))
          (when goal
            (kill-region (point-min) (point-max))
            (apply #'insert
