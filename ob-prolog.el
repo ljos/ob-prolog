@@ -124,14 +124,17 @@ then create.  Return the initialized session."
           (kill-region (point-min) (point-max))
           (prolog-inferior-mode)
           (setq prolog-program-name system)
-          (unless (comint-check-proc session)
-            (apply 'make-comint-in-buffer
-                   "prolog"
-                   (current-buffer)
-                   (prolog-program-name)
-                   nil
-                   (cons "-q" (prolog-program-switches))))
-          (sit-for 0.1)))
+          (apply 'make-comint-in-buffer
+                 "prolog"
+                 (current-buffer)
+                 (prolog-program-name)
+                 nil
+                 (cons "-q" (prolog-program-switches)))
+          (while (progn
+                   (goto-char comint-last-input-end)
+                   (not (save-excursion
+                          (re-search-forward comint-prompt-regexp nil t))))
+            (accept-process-output (get-buffer-process (current-buffer))))))
       session)))
 
 (provide 'ob-prolog)
