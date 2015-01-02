@@ -45,17 +45,19 @@
   `((:goal   . nil)
     (:system . ,(or prolog-system "swipl"))))
 
+(defun org-babel-prolog--variable-assignment (pair)
+  (let ((var (car pair))
+        (value (cdr pair)))
+    (format "recorda('%s', %s)"
+            var
+            (if (stringp value)
+                (format "'%s'"
+                        (replace-regexp-in-string
+                         "'" "\'" value))
+              value))))
+
 (defun org-babel-variable-assignments:prolog (params)
-  (let ((strs (mapcar (lambda (pair)
-                        (let ((var (car pair))
-                              (value (cdr pair)))
-                          (format "recorda('%s', %s)"
-                                  var
-                                  (if (stringp value)
-                                      (format "'%s'"
-                                              (replace-regexp-in-string
-                                               "'" "\'" value))
-                                    value))))
+  (let ((strs (mapcar #'org-babel-prolog--variable-assignment
                       (mapcar #'cdr
                               (org-babel-get-header params :var)))))
     (when strs
