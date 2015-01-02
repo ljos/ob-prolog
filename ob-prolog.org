@@ -3,13 +3,14 @@
 
 * Simple tests
 
-  #+BEGIN_SRC prolog :goal main(A, D) :session *prolog-1* :system swipl
-    main(A, B) :- A is 5, B is 5.
-    p(A) :- A is 3.
+  #+BEGIN_SRC prolog :var a=12 :var b="asdf" :goal main(A, D) :session *prolog-1* :system swipl
+    main(A, B) :- A is 5, recorded(b, B).
+    p(A) :- recorded(a, A).
   #+END_SRC
 
   #+RESULTS:
-  : A = D, D = 5.
+  : A = 5,
+  : D = asdf.
 
   #+BEGIN_SRC prolog :goal other(A) :session *prolog-1*
     other(A) :- A is 3.

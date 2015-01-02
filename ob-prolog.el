@@ -3,7 +3,7 @@
 ;; Copyright (C) Bjarte Johansen
 
 ;; Author: Bjarte Johansen
-;; Version: 0.1.0
+;; Version: 0.2.0
 ;; Keywords: literate programming, reproducible research
 
 ;; This file is NOT part of GNU Emacs.
@@ -37,6 +37,7 @@
 (require 'ob-comint)
 (require 'ob-eval)
 (require 'prolog)
+(require 'cl-lib)
 
 (add-to-list 'org-babel-tangle-lang-exts '("prolog" . "pl"))
 
@@ -44,9 +45,26 @@
   `((:goal   . nil)
     (:system . ,(or prolog-system "swipl"))))
 
-(defun org-babel-expand-body:prolog (body params))
-
-(defun org-babel-variable-assignments:prolog (params))
+(defun org-babel-variable-assignments:prolog (params)
+  (let ((strs (mapcar (lambda (pair)
+                        (let ((var (car pair))
+                              (value (cdr pair)))
+                          (format "recorda('%s', %s)"
+                                  var
+                                  (if (stringp value)
+                                      (format "'%s'"
+                                              (replace-regexp-in-string
+                                               "'" "\'" value))
+                                    value))))
+                      (mapcar #'cdr
+                              (org-babel-get-header params :var)))))
+    (when strs
+      (list
+       (concat ":- "
+               (cl-reduce (lambda (str expr)
+                            (concat str ",\n   " expr))
+                          strs)
+               ".\n")))))
 
 
 (defun org-babel-execute:prolog (body params)
@@ -54,12 +72,14 @@
 called by `org-babel-execute-src-block'"
   (message "executing Prolog source code block")
   (let* ((params (org-babel-process-params params))
-         (system  (cdr (assoc :system params)))
+         (system (cdr (assoc :system params)))
          (session (cdr (assoc :session params)))
-         (goal    (cdr (assoc :goal params))))
+         (goal (cdr (assoc :goal params)))
+         (vars (org-babel-variable-assignments:prolog params))
+         (full-body (org-babel-expand-body:generic body params vars)))
     (if (string= "none" session)
-        (org-babel-prolog-evaluate-external-process system goal body)
-      (org-babel-prolog-evaluate-session system session goal body))))
+        (org-babel-prolog-evaluate-external-process system goal full-body)
+      (org-babel-prolog-evaluate-session system session goal full-body))))
 
 (defun org-babel-load-session:prolog (session body params)
   "Load BODY into SESSION."
