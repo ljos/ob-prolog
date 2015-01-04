@@ -149,6 +149,8 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
          (if (save-excursion
                (search-backward "ERROR: " nil t))
              (progn
+               (search-backward "?-" nil t)
+               (kill-whole-line)
                (org-babel-eval-error-notify -1 (buffer-string))
                (buffer-string))
            (let ((delete-trailing-lines t))
