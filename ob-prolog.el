@@ -45,16 +45,24 @@
   `((:goal   . nil)
     (:system . ,(or prolog-system "swipl"))))
 
+(defun org-babel-prolog--elisp-to-pl (value)
+  (cond ((stringp value)
+         (format "'%s'"
+                 (replace-regexp-in-string
+                  "'" "\'" value)))
+        ((listp value)
+         (concat "["
+                 (cl-reduce (lambda (str val)
+                              (format "%s, %s" str val))
+                            (org-babel-prolog--elisp-to-pl value))
+                 "]"))
+        (t value)))
+
 (defun org-babel-prolog--variable-assignment (pair)
-  (let ((var (car pair))
-        (value (cdr pair)))
-    (format "recorda('%s', %s)"
-            var
-            (if (stringp value)
-                (format "'%s'"
-                        (replace-regexp-in-string
-                         "'" "\'" value))
-              value))))
+  (format "recorda('%s', %s)"
+          (car pair)
+          (org-babel-prolog--elisp-to-pl
+           (cdr pair))))
 
 (defun org-babel-variable-assignments:prolog (params)
   (let ((strs (mapcar #'org-babel-prolog--variable-assignment
