@@ -3,14 +3,21 @@
 
 * Simple tests
 
-  #+BEGIN_SRC prolog :var a=12 :var b="asdf" :goal main(A, D) :session *prolog-1* :system swipl
-    main(A, B) :- A is 5, recorded(b, B).
-    p(A) :- recorded(a, A).
+  #+NAME: f
+  #+BEGIN_SRC elisp
+    '(1 2 3)
+  #+END_SRC
+
+  #+RESULTS: f
+  | 1 | 2 | 3 |
+
+  #+BEGIN_SRC prolog :var a=f() :var b="asdf" :goal main(A, D) :session *prolog-1* :system swipl
+    main(A, B) :- recorded(a, A), recorded(b, C), append([C], A, B).
   #+END_SRC
 
   #+RESULTS:
-  : A = 5,
-  : D = asdf.
+  : A = [1, 2, 3],
+  : D = [asdf, 1, 2, 3].
 
   #+BEGIN_SRC prolog :goal other(A) :session *prolog-1*
     other(A) :- A is 3.
