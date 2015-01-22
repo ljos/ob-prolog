@@ -76,6 +76,23 @@
                           strs)
                ".\n")))))
 
+
+(defun org-babel-prolog--parse-goal (goal)
+  "Evaluate inline emacs-lisp in prolog goal parameter.
+
+Example:
+      append(=(+ 2 3), =(quote a), B)
+   => append(5, a, B)"
+  (with-temp-buffer
+    (insert goal)
+    (while (search-backward "=" nil t)
+      (delete-char 1 t)
+      (forward-sexp)
+      (let ((value (eval (preceding-sexp))))
+        (kill-sexp -1)
+        (insert (format "%S" value))))
+    (buffer-string)))
+
 (defun org-babel-execute:prolog (body params)
   "Execute a block of Prolog code with org-babel.  This function is
 called by `org-babel-execute-src-block'"
@@ -83,7 +100,8 @@ called by `org-babel-execute-src-block'"
   (let* ((params (org-babel-process-params params))
          (system (cdr (assoc :system params)))
          (session (cdr (assoc :session params)))
-         (goal (cdr (assoc :goal params)))
+         (goal (org-babel-prolog--parse-goal
+                (cdr (assoc :goal params))))
          (vars (org-babel-variable-assignments:prolog params))
          (full-body (org-babel-expand-body:generic body params vars)))
     (if (string= "none" session)
