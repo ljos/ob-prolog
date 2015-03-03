@@ -2,8 +2,3 @@
 
 This project contains a set of functions that are need to evaluate
 prolog in org-babel.
-
-* Disclaimer
-The project is still in development and shouldn't be used for anything
-other than testing. It might not always behave as it should. It might
-crash, freeze or corrupt your emacs session. Use with care.
