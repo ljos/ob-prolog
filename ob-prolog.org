@@ -11,7 +11,12 @@
   #+RESULTS: f
   | 1 | 2 | 3 |
 
-  #+BEGIN_SRC prolog :var a=f() :var b="asdf" :goal main(A, D) :session *prolog-1* :system swipl
+  #+HEADER: :session *prolog-1*
+  #+HEADER: :system swipl
+  #+HEADER: :var a=f()
+  #+HEADER: :var b="asdf"
+  #+HEADER: :goal main(A, D)
+  #+BEGIN_SRC prolog
     main(A, B) :- recorded(a, A), recorded(b, C), append([C], A, B).
   #+END_SRC
 
@@ -19,7 +24,9 @@
   : A = [1, 2, 3],
   : D = [asdf, 1, 2, 3].
 
-  #+BEGIN_SRC prolog :goal other(A) :session *prolog-1*
+  #+HEADER: :session *prolog-1*
+  #+HEADER: :goal other(A)
+  #+BEGIN_SRC prolog
     other(A) :- A is 3.
   #+END_SRC
 
