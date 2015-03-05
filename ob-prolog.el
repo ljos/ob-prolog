@@ -3,8 +3,9 @@
 ;; Copyright (C) Bjarte Johansen
 
 ;; Author: Bjarte Johansen
-;; Version: 0.2.0
 ;; Keywords: literate programming, reproducible research
+;; URL: https://github.com/ljos/ob-prolog
+;; Version: 0.2.0
 
 ;; This file is NOT part of GNU Emacs.
 
