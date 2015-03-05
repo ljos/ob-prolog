@@ -37,7 +37,6 @@
 (require 'ob-comint)
 (require 'ob-eval)
 (require 'prolog)
-(require 'cl-lib)
 
 (add-to-list 'org-babel-tangle-lang-exts '("prolog" . "pl"))
 
@@ -52,9 +51,9 @@
                   "'" "\'" value)))
         ((listp value)
          (concat "["
-                 (cl-reduce (lambda (str val)
-                              (format "%s, %s" str val))
-                            (org-babel-prolog--elisp-to-pl value))
+                 (mapconcat #'identity
+                            (org-babel-prolog--elisp-to-pl value)
+                            ", ")
                  "]"))
         (t value)))
 
@@ -71,9 +70,9 @@
     (when strs
       (list
        (concat ":- "
-               (cl-reduce (lambda (str expr)
-                            (concat str ",\n   " expr))
-                          strs)
+               (mapconcat #'identity
+                          (org-babel-prolog--elisp-to-pl value)
+                          ", ")
                ".\n")))))
 
 
