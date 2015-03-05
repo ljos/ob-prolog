@@ -26,10 +26,12 @@
 ;;; Commentary:
 
 ;; Org-babel support for prolog.
-
-;;; Requirements:
-
-;; - prolog
+;;
+;; To activate ob-prolog add the following to your init.el file:
+;;
+;;  (eval-after-load 'org
+;;    '(require 'org-prolog))
+;;
 
 ;;; Code:
 (require 'ob)
