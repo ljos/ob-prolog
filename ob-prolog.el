@@ -140,12 +140,11 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
        (apply #'insert
               (org-babel-comint-with-output (session "\n")
                 (setq comint-prompt-regexp (prolog-prompt-regexp))
-                (while body
-                  (insert (car body))
+                (dolist (line body)
+                  (insert line)
                   (comint-send-input nil t)
                   (accept-process-output
-                   (get-buffer-process session))
-                  (setq body (cdr body)))
+                   (get-buffer-process session)))
                 (comint-send-eof)))
        (ansi-color-apply-on-region (point-min) (point-max))
        (goto-char (point-max))
