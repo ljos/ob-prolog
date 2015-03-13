@@ -165,15 +165,14 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
                     (insert (concat goal ", !."))
                     (comint-send-input nil t))))
          (ansi-color-apply-on-region (point-min) (point-max))
-         (if (save-excursion
-               (search-backward "ERROR: " nil t))
-             (progn
-               (search-backward "?-" nil t)
-               (kill-whole-line)
-               (org-babel-eval-error-notify -1 (buffer-string))
+         (if (not (save-excursion
+                    (search-backward "ERROR: " nil t)))
+             (let ((delete-trailing-lines t))
+               (delete-trailing-whitespace (point-min))
                (buffer-string))
-           (let ((delete-trailing-lines t))
-             (delete-trailing-whitespace (point-min)))
+           (search-backward "?-" nil t)
+           (kill-whole-line)
+           (org-babel-eval-error-notify -1 (buffer-string))
            (buffer-string)))))))
 
 (defun org-babel-prolog--answer-correction (string)
