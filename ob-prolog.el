@@ -53,12 +53,8 @@
                  (replace-regexp-in-string
                   "'" "\'" value)))
         ((listp value)
-         (concat "["
-                 (mapconcat #'identity
-                            (org-babel-prolog--elisp-to-pl value)
-                            ", ")
-                 "]"))
-        (t value)))
+         (concat "[" (mapconcat 'org-babel-prolog--elisp-to-pl value ", ") "]"))
+        (t (prin1-to-string value))))
 
 (defun org-babel-prolog--variable-assignment (pair)
   (format "recorda('%s', %s)"
@@ -72,12 +68,7 @@
                               (org-babel-get-header params :var)))))
     (when strs
       (list
-       (concat ":- "
-               (mapconcat #'identity
-                          (org-babel-prolog--elisp-to-pl value)
-                          ", ")
-               ".\n")))))
-
+       (concat ":- " (mapconcat #'identity strs ", ") ".\n")))))
 
 (defun org-babel-prolog--parse-goal (goal)
   "Evaluate inline emacs-lisp in prolog goal parameter.
