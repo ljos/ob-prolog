@@ -112,7 +112,11 @@ called by `org-babel-execute-src-block'"
 (defun org-babel-prolog-evaluate-external-process (system goal body)
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
          (command (concat (format "%s -q -l %s" system tmp-file)
-                          (when goal (concat " -t " goal)))))
+                          (when goal
+                            (concat " -t \""
+                                    (replace-regexp-in-string
+                                     "\"" "\\\"" goal)
+                                    "\"")))))
     (write-region (org-babel-chomp body) nil tmp-file nil 'no-message)
     (with-temp-buffer
       (call-process-shell-command command nil t)
