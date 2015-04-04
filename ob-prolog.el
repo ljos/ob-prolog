@@ -53,7 +53,7 @@
                  (replace-regexp-in-string
                   "'" "\'" value)))
         ((listp value)
-         (concat "[" (mapconcat 'org-babel-prolog--elisp-to-pl value ", ") "]"))
+         (concat "[" (mapconcat #'org-babel-prolog--elisp-to-pl value ", ") "]"))
         (t (prin1-to-string value))))
 
 (defun org-babel-prolog--variable-assignment (pair)
@@ -190,18 +190,16 @@ then create.  Return the initialized session."
           (kill-region (point-min) (point-max))
           (prolog-inferior-mode)
           (setq prolog-program-name system)
-          (apply 'make-comint-in-buffer
+          (apply #'make-comint-in-buffer
                  "prolog"
                  (current-buffer)
                  (prolog-program-name)
                  nil
                  (cons "-q" (prolog-program-switches)))
           (add-hook 'comint-output-filter-functions
-                    'org-babel-prolog--answer-correction
-                    nil t)
+                    #'org-babel-prolog--answer-correction nil t)
           (add-hook 'comint-output-filter-functions
-                    'org-babel-prolog--exit-debug
-                    nil t)
+                    #'org-babel-prolog--exit-debug nil t)
           (while (progn
                    (goto-char comint-last-input-end)
                    (not (save-excursion
