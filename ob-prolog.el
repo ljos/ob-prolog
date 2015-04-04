@@ -113,10 +113,9 @@ called by `org-babel-execute-src-block'"
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
          (command (concat (format "%s -q -l %s" system tmp-file)
                           (when goal
-                            (concat " -t \""
+                            (format " -t \"%s\""
                                     (replace-regexp-in-string
-                                     "\"" "\\\"" goal)
-                                    "\"")))))
+                                     "\"" "\\\"" goal))))))
     (write-region (org-babel-chomp body) nil tmp-file nil 'no-message)
     (with-temp-buffer
       (call-process-shell-command command nil t)
