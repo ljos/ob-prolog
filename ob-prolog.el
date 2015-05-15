@@ -30,9 +30,13 @@
 ;;
 ;; To activate ob-prolog add the following to your init.el file:
 ;;
-;;  (eval-after-load 'org
-;;    '(require 'org-prolog))
+;;  (add-to-list 'load-path "/path/to/ob-prolog-dir")
+;;  (org-babel-do-load-languages
+;;    'org-babel-load-languages
+;;    '((prolog . t)))
 ;;
+;; The add to load-path is unnecessary if you install using the
+;; package manager.
 
 ;;; Code:
 (require 'ob)
