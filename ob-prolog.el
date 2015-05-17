@@ -80,15 +80,16 @@
 Example:
       append(=(+ 2 3), =(quote a), B)
    => append(5, a, B)"
-  (with-temp-buffer
-    (insert goal)
-    (while (search-backward "=" nil t)
-      (delete-char 1 t)
-      (forward-sexp)
-      (let ((value (eval (preceding-sexp))))
-        (kill-sexp -1)
-        (insert (format "%S" value))))
-    (buffer-string)))
+  (when goal
+    (with-temp-buffer
+      (insert goal)
+      (while (search-backward "=" nil t)
+	(delete-char 1 t)
+	(forward-sexp)
+	(let ((value (eval (preceding-sexp))))
+	  (kill-sexp -1)
+	  (insert (format "%S" value))))
+      (buffer-string))))
 
 (defun org-babel-execute:prolog (body params)
   "Execute a block of Prolog code with org-babel.  This function is
@@ -116,10 +117,9 @@ called by `org-babel-execute-src-block'"
 (defun org-babel-prolog-evaluate-external-process (system goal body)
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
          (command (concat (format "%s -q -l %s" system tmp-file)
-                          (when goal
-                            (format " -t \"%s\""
-                                    (replace-regexp-in-string
-                                     "\"" "\\\"" goal))))))
+                          (format " -t \"%s\""
+				  (replace-regexp-in-string
+				   "\"" "\\\"" (or goal "halt"))))))
     (write-region (org-babel-chomp body) nil tmp-file nil 'no-message)
     (with-temp-buffer
       (call-process-shell-command command nil t)

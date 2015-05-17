@@ -32,3 +32,19 @@
 
   #+RESULTS:
   : A = 3.
+
+
+  #+begin_src prolog
+    :- format('Hello, ~a.', org_mode).
+  #+end_src
+
+  #+RESULTS:
+  : Hello, org_mode.
+
+  #+begin_src prolog :session *prolog-1*
+    :- format('Hello, ~a.', org_session).
+  #+end_src
+
+  #+RESULTS:
+  : Hello, org_session.
+  : true.
