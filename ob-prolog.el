@@ -35,8 +35,14 @@
 ;;    'org-babel-load-languages
 ;;    '((prolog . t)))
 ;;
-;; The add to load-path is unnecessary if you install using the
-;; package manager.
+;; It is unnecessary to add the directory to the load path if you
+;; install using the package manager.
+;;
+;; In addition to the normal header arguments ob-prolog also supports
+;; the :goal argument. :goal is the goal that prolog will run when
+;; executing the source block. Prolog needs a goal to know what it is
+;; going to execute.
+;;
 
 ;;; Code:
 (require 'ob)
