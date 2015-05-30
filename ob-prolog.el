@@ -63,9 +63,8 @@
 
 (defun org-babel-prolog--variable-assignment (pair)
   (format "recorda('%s', %s)"
-          (car pair)
-          (org-babel-prolog--elisp-to-pl
-           (cdr pair))))
+          (replace-regexp-in-string "'" "\\'" (car pair))
+          (org-babel-prolog--elisp-to-pl (cdr pair))))
 
 (defun org-babel-variable-assignments:prolog (params)
   (let ((strs (mapcar #'org-babel-prolog--variable-assignment
