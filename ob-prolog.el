@@ -56,7 +56,7 @@
   (cond ((stringp value)
          (format "'%s'"
                  (replace-regexp-in-string
-                  "'" "\'" value)))
+                  "'" "\\'" value)))
         ((listp value)
          (concat "[" (mapconcat #'org-babel-prolog--elisp-to-pl value ", ") "]"))
         (t (prin1-to-string value))))
