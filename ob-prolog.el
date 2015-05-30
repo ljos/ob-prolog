@@ -116,11 +116,11 @@ called by `org-babel-execute-src-block'"
                 (cdr (assq :goal params))))
          (vars (org-babel-variable-assignments:prolog params))
          (full-body (org-babel-expand-body:generic body params vars))
-	 (result (if (string= "none" session)
-		     (org-babel-prolog-evaluate-external-process
-		      goal full-body)
-		   (org-babel-prolog-evaluate-session
-		    session goal full-body))))
+	 (results (if (string= "none" session)
+		      (org-babel-prolog-evaluate-external-process
+		       goal full-body)
+		    (org-babel-prolog-evaluate-session
+		     session goal full-body))))
     (org-babel-reassemble-table
      (org-babel-result-cond
 	 results
