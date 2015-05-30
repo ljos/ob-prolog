@@ -78,7 +78,7 @@
 
 (defun org-babel-prolog--variable-assignment (pair)
   (format "recorda('%s', %s)"
-          (replace-regexp-in-string "'" "\\'" (car pair))
+          (car pair)
           (org-babel-prolog--elisp-to-pl (cdr pair))))
 
 (defun org-babel-variable-assignments:prolog (params)
@@ -149,10 +149,9 @@ resulting in running just the body through the Prolog process."
 			  tmp-file
 			  (replace-regexp-in-string
 			   "\"" "\\\"" (or goal "halt")))))
-    (write-region (org-babel-chomp body) nil tmp-file nil 'no-message)
-    (with-temp-buffer
-      (call-process-shell-command command nil t)
-      (buffer-string))))
+    (with-temp-file tmp-file
+	(insert (org-babel-chomp body)))
+    (org-babel-eval command "")))
 
 (defun org-babel-prolog-evaluate-session (session goal body)
   "Evaluates the GOAL in the BODY of the prolog block in the
