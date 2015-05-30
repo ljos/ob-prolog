@@ -130,10 +130,11 @@ called by `org-babel-execute-src-block'"
 process.  If no GOAL is given the GOAL is replaced with HALT,
 resulting in running just the body through the Prolog process."
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
-         (command (concat (format "%s -q -l %s" system tmp-file)
-                          (format " -t \"%s\""
-				  (replace-regexp-in-string
-				   "\"" "\\\"" (or goal "halt"))))))
+         (command (format "%s -q -l %s -t \"%s\""
+			  org-babel-prolog-command
+			  tmp-file
+			  (replace-regexp-in-string
+			   "\"" "\\\"" (or goal "halt")))))
     (write-region (org-babel-chomp body) nil tmp-file nil 'no-message)
     (with-temp-buffer
       (call-process-shell-command command nil t)
