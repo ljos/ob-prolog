@@ -47,9 +47,10 @@
 
 (add-to-list 'org-babel-tangle-lang-exts '("prolog" . "pl"))
 
+(defvar org-babel-prolog-command (or prolog-system "swipl")
+  "Name of the prolog executable command.")
 (defvar org-babel-default-header-args:prolog
-  `((:goal   . nil)
-    (:system . ,(or prolog-system "swipl"))))
+  `((:goal . nil)))
 
 (defun org-babel-prolog--elisp-to-pl (value)
   (cond ((stringp value)
@@ -96,25 +97,38 @@ Example:
 called by `org-babel-execute-src-block'"
   (message "executing Prolog source code block")
   (let* ((params (org-babel-process-params params))
-         (system (cdr (assoc :system params)))
          (session (cdr (assoc :session params)))
          (goal (org-babel-prolog--parse-goal
                 (cdr (assoc :goal params))))
          (vars (org-babel-variable-assignments:prolog params))
-         (full-body (org-babel-expand-body:generic body params vars)))
-    (if (string= "none" session)
-        (org-babel-prolog-evaluate-external-process system goal full-body)
-      (org-babel-prolog-evaluate-session system session goal full-body))))
+         (full-body (org-babel-expand-body:generic body params vars))
+	 (result (if (string= "none" session)
+		     (org-babel-prolog-evaluate-external-process
+		      goal full-body)
+		   (org-babel-prolog-evaluate-session
+		    session goal full-body))))
+    (org-babel-reassemble-table
+     (org-babel-result-cond
+	 results
+       (let ((tmp (org-babel-temp-file "prolog-results-")))
+	 (with-temp-file tmp (insert results))
+	 (org-babel-import-elisp-from-file tmp)))
+     (org-babel-pick-name (cdr (assq :colname-names params))
+			  (cdr (assq :colnames params)))
+     (org-babel-pick-name (cdr (assq :rowname-names params))
+			  (cdr (assq :rownames params))))))
 
 (defun org-babel-load-session:prolog (session body params)
   "Load BODY into SESSION."
   (let* ((params (org-babel-process-params params))
          (session (org-babel-prolog-initiate-session
-                   (cdr (assoc :system params))
-                   (cdr (assoc :session session)))))
-    (org-babel-prolog-initiate-session session system)))
+                   (cdr (assq :session session)))))
+    (org-babel-prolog-initiate-session session)))
 
-(defun org-babel-prolog-evaluate-external-process (system goal body)
+(defun org-babel-prolog-evaluate-external-process (goal body)
+  "Evaluates the GOAL given the BODY in a external Prolog
+process.  If no GOAL is given the GOAL is replaced with HALT,
+resulting in running just the body through the Prolog process."
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
          (command (concat (format "%s -q -l %s" system tmp-file)
                           (format " -t \"%s\""
@@ -125,10 +139,10 @@ called by `org-babel-execute-src-block'"
       (call-process-shell-command command nil t)
       (buffer-string))))
 
-(defun org-babel-prolog-evaluate-session (system session goal body)
+(defun org-babel-prolog-evaluate-session (session goal body)
   "Evaluates the GOAL in the BODY of the prolog block in the
-given SESSION with SYSTEM. If there is no SESSION it creates it."
-  (let* ((session (org-babel-prolog-initiate-session system session))
+given SESSION.  If there is no SESSION it creates it."
+  (let* ((session (org-babel-prolog-initiate-session session))
          (body (split-string (org-babel-trim body) "\n")))
     (org-babel-trim
      (with-temp-buffer
@@ -183,7 +197,7 @@ given SESSION with SYSTEM. If there is no SESSION it creates it."
     (insert "no debug")
     (comint-send-input nil t)))
 
-(defun org-babel-prolog-initiate-session (system &optional session)
+(defun org-babel-prolog-initiate-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION
 then create.  Return the initialized session."
   (unless (string= session "none")
@@ -192,7 +206,7 @@ then create.  Return the initialized session."
         (with-current-buffer session
           (kill-region (point-min) (point-max))
           (prolog-inferior-mode)
-          (setq prolog-program-name system)
+          (setq prolog-program-name org-babel-prolog-command)
           (apply #'make-comint-in-buffer
                  "prolog"
                  (current-buffer)
