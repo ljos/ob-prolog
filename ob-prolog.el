@@ -110,7 +110,7 @@ Example:
   "Execute a block of Prolog code with org-babel.  This function is
 called by `org-babel-execute-src-block'"
   (message "executing Prolog source code block")
-  (let* ((params (org-babel-process-params params))
+  (let* ((result-params (cdr (assq :result-params params)))
          (session (cdr (assq :session params)))
          (goal (org-babel-prolog--parse-goal
                 (cdr (assq :goal params))))
@@ -122,8 +122,8 @@ called by `org-babel-execute-src-block'"
 		    (org-babel-prolog-evaluate-session
 		     session goal full-body))))
     (org-babel-reassemble-table
-     (org-babel-result-cond
-	 results
+     (org-babel-result-cond result-params
+       results
        (let ((tmp (org-babel-temp-file "prolog-results-")))
 	 (with-temp-file tmp (insert results))
 	 (org-babel-import-elisp-from-file tmp)))
