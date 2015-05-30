@@ -97,9 +97,9 @@ Example:
 called by `org-babel-execute-src-block'"
   (message "executing Prolog source code block")
   (let* ((params (org-babel-process-params params))
-         (session (cdr (assoc :session params)))
+         (session (cdr (assq :session params)))
          (goal (org-babel-prolog--parse-goal
-                (cdr (assoc :goal params))))
+                (cdr (assq :goal params))))
          (vars (org-babel-variable-assignments:prolog params))
          (full-body (org-babel-expand-body:generic body params vars))
 	 (result (if (string= "none" session)
