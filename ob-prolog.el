@@ -49,6 +49,12 @@
 
 (defvar org-babel-prolog-command (or prolog-system "swipl")
   "Name of the prolog executable command.")
+
+(defconst org-babel-header-args:prolog
+  '((:goal . :any))
+  "Prolog specific header arguments.")
+
+
 (defvar org-babel-default-header-args:prolog
   `((:goal . nil)))
 
