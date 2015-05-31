@@ -1,19 +1,21 @@
 #+PROPERTY: results silent scalar
 #+TITLE: Tests for ob-prolog
 
-
 * Basic prolog source block
+  #+NAME: basic-test
   #+BEGIN_SRC prolog
     :- format('Hello, ~a.', org_mode).
   #+END_SRC
 
 * Source block with goal
+  #+NAME: goal-test
   #+BEGIN_SRC prolog :goal main
     main :-
         write('Hello, world!').
   #+END_SRC
 
 * Simple running session
+  #+NAME: session-test
   #+HEADER: :session *prolog-1*
   #+HEADER: :goal fourtyone(A)
   #+BEGIN_SRC prolog
@@ -21,8 +23,9 @@
   #+END_SRC
 
 * Calling predicate from session
-  #+HEADER :session *prolog-1*
-  #+HEADER :goal answer(A)
+  #+NAME: other-predicate-test
+  #+HEADER: :goal answer(A)
+  #+HEADER: :session *prolog-1*
   #+BEGIN_SRC prolog
     answer(C) :-
         fourtyone(B),
@@ -36,6 +39,7 @@
     '(1 2 3)
   #+END_SRC
 
+  #+NAME: interaction-test
   #+HEADER: :var a=f()
   #+HEADER: :var b=0
   #+HEADER: :goal main(A)
