@@ -50,17 +50,19 @@
 		   (error nil))
 		 (org-babel-goto-named-src-block ,(symbol-name name))
 		 (save-excursion
-		   (ignore-errors
-		     (org-babel-previous-src-block)
-		     (end-of-line)
+		   (ignore-errors ;; if there is no previous src block.
 		     (let* ((info (nth 2 (org-babel-get-src-block-info)))
 			    (session (cdr (assq :session info)))
-			    (bound (point)))
+			    (bound (progn
+				     (org-babel-previous-src-block)
+				     (end-of-line)
+				     (point))))
 		       (setq ,active-session
 			     (unless (string= "none" session)
 			       session))
 		       (goto-char (point-min))
-		       (while (search-forward (concat ":session " session) bound t)
+		       (while (search-forward
+			       (concat ":session " session) bound t)
 			 (org-babel-execute-src-block)))))
 		 (save-restriction ,@body)))
 	   (unless ,visited-p
