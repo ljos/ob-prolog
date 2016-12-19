@@ -83,11 +83,9 @@
 
 (defun org-babel-variable-assignments:prolog (params)
   (let ((strs (mapcar #'org-babel-prolog--variable-assignment
-                      (mapcar #'cdr
-                              (org-babel-get-header params :var)))))
+                      (mapcar #'cdr (org-babel--get-vars params :var)))))
     (when strs
-      (list
-       (concat ":- " (mapconcat #'identity strs ", ") ".\n")))))
+      (list (concat ":- " (mapconcat #'identity strs ", ") ".\n")))))
 
 (defun org-babel-prolog--parse-goal (goal)
   "Evaluate inline emacs-lisp in prolog goal parameter.
