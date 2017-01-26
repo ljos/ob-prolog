@@ -5,7 +5,7 @@
 ;; Author: Bjarte Johansen
 ;; Keywords: literate programming, reproducible research
 ;; URL: https://github.com/ljos/ob-prolog
-;; Version: 1.0.0
+;; Version: 1.0.1
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -83,7 +83,7 @@
 
 (defun org-babel-variable-assignments:prolog (params)
   (let ((strs (mapcar #'org-babel-prolog--variable-assignment
-                      (mapcar #'cdr (org-babel--get-vars params :var)))))
+                      (mapcar #'cdr (org-babel--get-vars params)))))
     (when strs
       (list (concat ":- " (mapconcat #'identity strs ", ") ".\n")))))
 
