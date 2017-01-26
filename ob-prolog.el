@@ -119,16 +119,17 @@ called by `org-babel-execute-src-block'"
 		       goal full-body)
 		    (org-babel-prolog-evaluate-session
 		     session goal full-body))))
-    (org-babel-reassemble-table
-     (org-babel-result-cond result-params
-       results
-       (let ((tmp (org-babel-temp-file "prolog-results-")))
-	 (with-temp-file tmp (insert results))
-	 (org-babel-import-elisp-from-file tmp)))
-     (org-babel-pick-name (cdr (assq :colname-names params))
-			  (cdr (assq :colnames params)))
-     (org-babel-pick-name (cdr (assq :rowname-names params))
-			  (cdr (assq :rownames params))))))
+    (unless (string= "" results)
+      (org-babel-reassemble-table
+       (org-babel-result-cond result-params
+	 results
+	 (let ((tmp (org-babel-temp-file "prolog-results-")))
+	   (with-temp-file tmp (insert results))
+	   (org-babel-import-elisp-from-file tmp)))
+       (org-babel-pick-name (cdr (assq :colname-names params))
+			    (cdr (assq :colnames params)))
+       (org-babel-pick-name (cdr (assq :rowname-names params))
+			    (cdr (assq :rownames params)))))))
 
 (defun org-babel-load-session:prolog (session body params)
   "Load BODY into SESSION."
