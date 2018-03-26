@@ -83,7 +83,9 @@
 
 (defun org-babel-variable-assignments:prolog (params)
   (let ((strs (mapcar #'org-babel-prolog--variable-assignment
-		      (org-babel--get-vars params))))
+                      (if (fboundp 'org-babel--get-vars)
+                          (org-babel--get-vars params)
+                        (org-babel-get-header params :var)))))
     (when strs
       (list (concat ":- " (mapconcat #'identity strs ", ") ".\n")))))
 
