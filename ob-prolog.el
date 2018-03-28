@@ -155,9 +155,10 @@ This function is called by `org-babel-execute-src-block.'"
     (org-babel-prolog-initiate-session session)))
 
 (defun org-babel-prolog-evaluate-external-process (goal body)
-  "Evaluates the GOAL given the BODY in a external Prolog
-process.  If no GOAL is given the GOAL is replaced with HALT,
-resulting in running just the body through the Prolog process."
+  "Evaluate the GOAL given the BODY in an external Prolog process.
+
+If no GOAL is given, the GOAL is replaced with HALT.  This resulsts in
+running just the body through the Prolog process."
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
          (command (format "%s -q -l %s -t \"%s\""
 			  org-babel-prolog-command
