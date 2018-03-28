@@ -65,6 +65,7 @@
   `((:goal . nil)))
 
 (defun org-babel-prolog--elisp-to-pl (value)
+  "Convert the Emacs Lisp VALUE to equivalent Prolog."
   (cond ((stringp value)
          (format "'%s'"
                  (replace-regexp-in-string
