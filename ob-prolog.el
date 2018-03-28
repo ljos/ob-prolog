@@ -169,14 +169,14 @@ This function is called by `org-babel-execute-src-block.'"
 If no GOAL is given, the GOAL is replaced with HALT.  This results in
 running just the body through the Prolog process."
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
-         (command (format "%s -q -l %s -t \"%s\""
+         (command (format "%s --quiet -l %s -g \"%s\" -t 'halt'"
 			  org-babel-prolog-command
 			  tmp-file
 			  (replace-regexp-in-string
 			   "\"" "\\\"" (or goal "halt")))))
     (with-temp-file tmp-file
 	(insert (org-babel-chomp body)))
-    (org-babel-eval command "")))
+    (or (org-babel-eval command "") "")))
 
 (defun org-babel-prolog--session-load-clauses (session clauses)
   (with-current-buffer session
