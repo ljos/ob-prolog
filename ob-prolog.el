@@ -120,8 +120,9 @@ Example:
       (buffer-string))))
 
 (defun org-babel-execute:prolog (body params)
-  "Execute a block of Prolog code with org-babel.  This function is
-called by `org-babel-execute-src-block'"
+  "Execute the Prolog in BODY according to the block's header PARAMS.
+
+This function is called by `org-babel-execute-src-block.'"
   (message "executing Prolog source code block")
   (let* ((result-params (cdr (assq :result-params params)))
          (session (cdr (assq :session params)))
