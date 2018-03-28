@@ -112,9 +112,10 @@ Example:
       (insert goal)
       (while (search-backward "=" nil t)
 	(delete-char 1 t)
-	(forward-sexp)
-	(let ((value (eval (preceding-sexp))))
-	  (kill-sexp -1)
+	(let ((value (eval
+                      (read
+                       (thing-at-point 'sexp)))))
+	  (kill-sexp)
 	  (insert (format "%S" value))))
       (buffer-string))))
 
