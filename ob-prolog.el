@@ -78,6 +78,12 @@
         (t (prin1-to-string value))))
 
 (defun org-babel-prolog--variable-assignment (pair)
+  "Return a string of a recorda/2 assertion of (cdr PAIR) under (car PAIR).
+
+The Emacs Lisp value of the car of PAIR is used as the Key argument to
+recorda/2 without modification.  The cdr of PAIR is converted to
+equivalent Prolog before being provided as the Term argument to
+recorda/2."
   (format "recorda('%s', %s)"
           (car pair)
           (org-babel-prolog--elisp-to-pl (cdr pair))))
