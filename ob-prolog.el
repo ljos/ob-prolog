@@ -89,6 +89,11 @@ recorda/2."
           (org-babel-prolog--elisp-to-pl (cdr pair))))
 
 (defun org-babel-variable-assignments:prolog (params)
+  "Return the babel variable assignments in PARAMS.
+
+PARAMS is a quasi-alist of header args, which may contain
+multiple entries for the key `:var'.  This function returns a
+list of the cdr of all the `:var' entries."
   (let (vars)
     (dolist (param params vars)
       (when (eq (car param) :var)
