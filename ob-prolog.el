@@ -170,8 +170,9 @@ running just the body through the Prolog process."
     (org-babel-eval command "")))
 
 (defun org-babel-prolog-evaluate-session (session goal body)
-  "Evaluates the GOAL in the BODY of the prolog block in the
-given SESSION.  If there is no SESSION it creates it."
+  "In SESSION, evaluate GOAL given the BODY of the Prolog block.
+
+Create SESSION if it does not already exist."
   (let* ((session (org-babel-prolog-initiate-session session))
          (body (split-string (org-babel-trim body) "\n")))
     (org-babel-trim
