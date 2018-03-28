@@ -148,7 +148,9 @@ This function is called by `org-babel-execute-src-block.'"
 			    (cdr (assq :rownames params)))))))
 
 (defun org-babel-load-session:prolog (session body params)
-  "Load BODY into SESSION."
+  "Return initialized Prolog SESSION.
+
+BODY and PARAMS are both unused."
   (let* ((params (org-babel-process-params params))
          (session (org-babel-prolog-initiate-session
                    (cdr (assq :session session)))))
