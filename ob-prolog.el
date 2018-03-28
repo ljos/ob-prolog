@@ -103,7 +103,7 @@ list of the cdr of all the `:var' entries."
       (list (concat ":- " (mapconcat #'identity vars ", ") ".\n")))))
 
 (defun org-babel-prolog--parse-goal (goal)
-  "Evaluate inline emacs-lisp in prolog goal parameter.
+  "Evaluate the inline Emacs Lisp in GOAL.
 
 Example:
       append(=(+ 2 3), =(quote a), B)
