@@ -39,8 +39,8 @@
 ;; install using the package manager.
 ;;
 ;; In addition to the normal header arguments ob-prolog also supports
-;; the :goal argument. :goal is the goal that prolog will run when
-;; executing the source block. Prolog needs a goal to know what it is
+;; the :goal argument.  :goal is the goal that prolog will run when
+;; executing the source block.  Prolog needs a goal to know what it is
 ;; going to execute.
 ;;
 
@@ -58,13 +58,14 @@
 
 (defconst org-babel-header-args:prolog
   '((:goal . :any))
-  "Prolog specific header arguments.")
+  "Prolog-specific header arguments.")
 
 
 (defvar org-babel-default-header-args:prolog
   `((:goal . nil)))
 
 (defun org-babel-prolog--elisp-to-pl (value)
+  "Convert the Emacs Lisp VALUE to equivalent Prolog."
   (cond ((stringp value)
          (format "'%s'"
                  (replace-regexp-in-string
@@ -77,11 +78,22 @@
         (t (prin1-to-string value))))
 
 (defun org-babel-prolog--variable-assignment (pair)
+  "Return a string of a recorda/2 assertion of (cdr PAIR) under (car PAIR).
+
+The Emacs Lisp value of the car of PAIR is used as the Key argument to
+recorda/2 without modification.  The cdr of PAIR is converted to
+equivalent Prolog before being provided as the Term argument to
+recorda/2."
   (format "recorda('%s', %s)"
           (car pair)
           (org-babel-prolog--elisp-to-pl (cdr pair))))
 
 (defun org-babel-variable-assignments:prolog (params)
+  "Return the babel variable assignments in PARAMS.
+
+PARAMS is a quasi-alist of header args, which may contain
+multiple entries for the key `:var'.  This function returns a
+list of the cdr of all the `:var' entries."
   (let (vars)
     (dolist (param params vars)
       (when (eq (car param) :var)
@@ -91,7 +103,7 @@
       (list (concat ":- " (mapconcat #'identity vars ", ") ".\n")))))
 
 (defun org-babel-prolog--parse-goal (goal)
-  "Evaluate inline emacs-lisp in prolog goal parameter.
+  "Evaluate the inline Emacs Lisp in GOAL.
 
 Example:
       append(=(+ 2 3), =(quote a), B)
@@ -108,8 +120,9 @@ Example:
       (buffer-string))))
 
 (defun org-babel-execute:prolog (body params)
-  "Execute a block of Prolog code with org-babel.  This function is
-called by `org-babel-execute-src-block'"
+  "Execute the Prolog in BODY according to the block's header PARAMS.
+
+This function is called by `org-babel-execute-src-block.'"
   (message "executing Prolog source code block")
   (let* ((result-params (cdr (assq :result-params params)))
          (session (cdr (assq :session params)))
@@ -135,16 +148,19 @@ called by `org-babel-execute-src-block'"
 			    (cdr (assq :rownames params)))))))
 
 (defun org-babel-load-session:prolog (session body params)
-  "Load BODY into SESSION."
+  "Return initialized Prolog SESSION.
+
+BODY and PARAMS are both unused."
   (let* ((params (org-babel-process-params params))
          (session (org-babel-prolog-initiate-session
                    (cdr (assq :session session)))))
     (org-babel-prolog-initiate-session session)))
 
 (defun org-babel-prolog-evaluate-external-process (goal body)
-  "Evaluates the GOAL given the BODY in a external Prolog
-process.  If no GOAL is given the GOAL is replaced with HALT,
-resulting in running just the body through the Prolog process."
+  "Evaluate the GOAL given the BODY in an external Prolog process.
+
+If no GOAL is given, the GOAL is replaced with HALT.  This resulsts in
+running just the body through the Prolog process."
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
          (command (format "%s -q -l %s -t \"%s\""
 			  org-babel-prolog-command
@@ -156,8 +172,9 @@ resulting in running just the body through the Prolog process."
     (org-babel-eval command "")))
 
 (defun org-babel-prolog-evaluate-session (session goal body)
-  "Evaluates the GOAL in the BODY of the prolog block in the
-given SESSION.  If there is no SESSION it creates it."
+  "In SESSION, evaluate GOAL given the BODY of the Prolog block.
+
+Create SESSION if it does not already exist."
   (let* ((session (org-babel-prolog-initiate-session session))
          (body (split-string (org-babel-trim body) "\n")))
     (org-babel-trim
@@ -204,18 +221,21 @@ given SESSION.  If there is no SESSION it creates it."
            (buffer-string)))))))
 
 (defun org-babel-prolog--answer-correction (string)
+  "If STRING is Prolog's \"Correct to:\" prompt, send a refusal."
   (when (string-match-p "Correct to: \".*\"\\?" string)
     (insert "no")
     (comint-send-input nil t)))
 
 (defun org-babel-prolog--exit-debug (string)
+  "If STRING indicates an exception, continue Prolog execution in no debug mode."
   (when (string-match-p "\\(.\\|\n\\)*Exception.* \\? $" string)
     (insert "no debug")
     (comint-send-input nil t)))
 
 (defun org-babel-prolog-initiate-session (&optional session)
-  "If there is not a current inferior-process-buffer in SESSION
-then create.  Return the initialized session."
+  "Return SESSION with a current inferior-process-buffer.
+
+Initialize SESSION if it has not already been initialized."
   (unless (string= session "none")
     (let ((session (get-buffer-create (or session "*prolog*"))))
       (unless (comint-check-proc session)
