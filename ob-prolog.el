@@ -225,6 +225,7 @@ Create SESSION if it does not already exist."
     (comint-send-input nil t)))
 
 (defun org-babel-prolog--exit-debug (string)
+  "If STRING indicates an exception, continue Prolog execution in no debug mode."
   (when (string-match-p "\\(.\\|\n\\)*Exception.* \\? $" string)
     (insert "no debug")
     (comint-send-input nil t)))
