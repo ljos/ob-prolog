@@ -219,6 +219,7 @@ Create SESSION if it does not already exist."
            (buffer-string)))))))
 
 (defun org-babel-prolog--answer-correction (string)
+  "If STRING is Prolog's \"Correct to:\" prompt, send a refusal."
   (when (string-match-p "Correct to: \".*\"\\?" string)
     (insert "no")
     (comint-send-input nil t)))
