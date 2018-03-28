@@ -51,9 +51,10 @@
 (require 'ob-eval)
 (require 'prolog)
 
+
 (add-to-list 'org-babel-tangle-lang-exts '("prolog" . "pl"))
 
-(defvar org-babel-prolog-command (or prolog-system "swipl")
+(defvar org-babel-prolog-command (prolog-program-name)
   "Name of the prolog executable command.")
 
 (defconst org-babel-header-args:prolog
@@ -84,7 +85,7 @@ The Emacs Lisp value of the car of PAIR is used as the Key argument to
 recorda/2 without modification.  The cdr of PAIR is converted to
 equivalent Prolog before being provided as the Term argument to
 recorda/2."
-  (format "recorda('%s', %s)"
+  (format ":- recorda('%s', %s)."
           (car pair)
           (org-babel-prolog--elisp-to-pl (cdr pair))))
 
@@ -96,11 +97,9 @@ multiple entries for the key `:var'.  This function returns a
 list of the cdr of all the `:var' entries."
   (let (vars)
     (dolist (param params vars)
-      (when (eq (car param) :var)
-        (setq vars (cons (org-babel-prolog--variable-assignment (cdr param))
-                         vars))))
-    (when vars
-      (list (concat ":- " (mapconcat #'identity vars ", ") ".\n")))))
+      (when (eq :var (car param))
+        (let ((var (org-babel-prolog--variable-assignment (cdr param))))
+          (setq vars (cons var vars)))))))
 
 (defun org-babel-prolog--parse-goal (goal)
   "Evaluate the inline Emacs Lisp in GOAL.
@@ -147,19 +146,26 @@ This function is called by `org-babel-execute-src-block.'"
        (org-babel-pick-name (cdr (assq :rowname-names params))
 			    (cdr (assq :rownames params)))))))
 
-(defun org-babel-load-session:prolog (session body params)
-  "Return initialized Prolog SESSION.
+(defun org-babel-prep-session:prolog (session params)
+  (let ((var-lines (org-babel-variable-assignments:prolog params)))
+    (org-babel-prolog--session-load-clauses session var-lines)
+    session))
 
-BODY and PARAMS are both unused."
+(defun org-babel-load-session:prolog (session body params)
+  "Load the BODY into the SESSION given the PARAMS."
   (let* ((params (org-babel-process-params params))
-         (session (org-babel-prolog-initiate-session
-                   (cdr (assq :session session)))))
-    (org-babel-prolog-initiate-session session)))
+         (goal (org-babel-prolog--parse-goal (cdr (assq :goal params))))
+         (session (org-babel-prolog-initiate-session session)))
+    (org-babel-prep-session:prolog session params)
+    (org-babel-prolog-evaluate-session session goal body)
+    (with-current-buffer session
+      (goto-char (point-max)))
+    session))
 
 (defun org-babel-prolog-evaluate-external-process (goal body)
   "Evaluate the GOAL given the BODY in an external Prolog process.
 
-If no GOAL is given, the GOAL is replaced with HALT.  This resulsts in
+If no GOAL is given, the GOAL is replaced with HALT.  This results in
 running just the body through the Prolog process."
   (let* ((tmp-file (org-babel-temp-file "prolog-"))
          (command (format "%s -q -l %s -t \"%s\""
@@ -171,88 +177,86 @@ running just the body through the Prolog process."
 	(insert (org-babel-chomp body)))
     (org-babel-eval command "")))
 
+(defun org-babel-prolog--session-load-clauses (session clauses)
+  (with-current-buffer session
+    (setq comint-prompt-regexp "^|: *"))
+  (org-babel-comint-input-command session "consult(user).\n")
+  (message (prolog-prompt-regexp))
+  (org-babel-comint-with-output (session "\n")
+    (setq comint-prompt-regexp (prolog-prompt-regexp))
+    (dolist (line clauses)
+      (insert line)
+      (comint-send-input nil t)
+      (accept-process-output
+       (get-buffer-process session)))
+    (comint-send-eof)))
+
 (defun org-babel-prolog-evaluate-session (session goal body)
   "In SESSION, evaluate GOAL given the BODY of the Prolog block.
 
 Create SESSION if it does not already exist."
   (let* ((session (org-babel-prolog-initiate-session session))
          (body (split-string (org-babel-trim body) "\n")))
-    (org-babel-trim
-     (with-temp-buffer
-       (with-current-buffer session
-         (setq comint-prompt-regexp "^|: *"))
-       (org-babel-comint-input-command session "consult(user).\n")
-       (apply #'insert
-              (org-babel-comint-with-output (session "\n")
-                (setq comint-prompt-regexp (prolog-prompt-regexp))
-                (dolist (line body)
-                  (insert line)
-                  (comint-send-input nil t)
-                  (accept-process-output
-                   (get-buffer-process session)))
-                (comint-send-eof)))
-       (ansi-color-apply-on-region (point-min) (point-max))
-       (goto-char (point-max))
-       (if (save-excursion
-             (search-backward "ERROR: " nil t))
-           (progn
-             (save-excursion
-               (while (search-backward "|: " nil t)
-                 (replace-match "" nil t)))
-             (search-backward "true." nil t)
-             (kill-whole-line)
-             (org-babel-eval-error-notify -1 (buffer-string))
-             (buffer-string))
-         (when goal
-           (kill-region (point-min) (point-max))
-           (apply #'insert
-                  (org-babel-comint-with-output (session "")
-                    (insert (concat goal ", !."))
-                    (comint-send-input nil t))))
-         (ansi-color-apply-on-region (point-min) (point-max))
-         (if (not (save-excursion
-                    (search-backward "ERROR: " nil t)))
-             (let ((delete-trailing-lines t))
-               (delete-trailing-whitespace (point-min))
-               (buffer-string))
-           (search-backward "?-" nil t)
-           (kill-whole-line)
-           (org-babel-eval-error-notify -1 (buffer-string))
-           (buffer-string)))))))
+    (with-temp-buffer
+      (apply #'insert (org-babel-prolog--session-load-clauses session body))
+      (if (save-excursion
+            (search-backward "ERROR: " nil t))
+          (progn
+            (save-excursion
+              (while (search-backward "|: " nil t)
+                (replace-match "" nil t)))
+            (search-backward "true." nil t)
+            (kill-whole-line)
+            (org-babel-eval-error-notify -1 (buffer-string))
+            (buffer-string))
+        (when goal
+          (kill-region (point-min) (point-max))
+          (apply #'insert
+                 (org-babel-comint-with-output (session "")
+                   (insert (concat goal ", !."))
+                   (comint-send-input nil t))))
+        (if (not (save-excursion
+                   (search-backward "ERROR: " nil t)))
+            (let ((delete-trailing-lines t))
+              (delete-trailing-whitespace (point-min))
+              (org-babel-trim (buffer-string)))
+          ;;(search-backward "?-" nil t)
+          ;;(kill-whole-line)
+          (org-babel-eval-error-notify -1 (buffer-string))
+          (org-babel-trim (buffer-string)))))))
 
 (defun org-babel-prolog--answer-correction (string)
   "If STRING is Prolog's \"Correct to:\" prompt, send a refusal."
   (when (string-match-p "Correct to: \".*\"\\?" string)
-    (insert "no")
     (comint-send-input nil t)))
 
 (defun org-babel-prolog--exit-debug (string)
   "If STRING indicates an exception, continue Prolog execution in no debug mode."
   (when (string-match-p "\\(.\\|\n\\)*Exception.* \\? $" string)
-    (insert "no debug")
     (comint-send-input nil t)))
 
 (defun org-babel-prolog-initiate-session (&optional session)
   "Return SESSION with a current inferior-process-buffer.
 
 Initialize SESSION if it has not already been initialized."
-  (unless (string= session "none")
+  (unless  (equal "none" session)
     (let ((session (get-buffer-create (or session "*prolog*"))))
       (unless (comint-check-proc session)
         (with-current-buffer session
           (kill-region (point-min) (point-max))
           (prolog-inferior-mode)
-          (setq prolog-program-name org-babel-prolog-command)
           (apply #'make-comint-in-buffer
                  "prolog"
                  (current-buffer)
-                 (prolog-program-name)
+                 org-babel-prolog-command
                  nil
                  (cons "-q" (prolog-program-switches)))
           (add-hook 'comint-output-filter-functions
                     #'org-babel-prolog--answer-correction nil t)
           (add-hook 'comint-output-filter-functions
                     #'org-babel-prolog--exit-debug nil t)
+          (add-hook 'comint-preoutput-filter-functions
+                    #'ansi-color-apply nil t)
           (while (progn
                    (goto-char comint-last-input-end)
                    (not (save-excursion
