@@ -231,8 +231,9 @@ Create SESSION if it does not already exist."
     (comint-send-input nil t)))
 
 (defun org-babel-prolog-initiate-session (&optional session)
-  "If there is not a current inferior-process-buffer in SESSION
-then create.  Return the initialized session."
+  "Return SESSION with a current inferior-process-buffer.
+
+Initialize SESSION if it has not already been initialized."
   (unless (string= session "none")
     (let ((session (get-buffer-create (or session "*prolog*"))))
       (unless (comint-check-proc session)
