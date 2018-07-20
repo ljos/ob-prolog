@@ -182,7 +182,6 @@ running just the body through the Prolog process."
   (with-current-buffer session
     (setq comint-prompt-regexp "^|: *"))
   (org-babel-comint-input-command session "consult(user).\n")
-  (message (prolog-prompt-regexp))
   (org-babel-comint-with-output (session "\n")
     (setq comint-prompt-regexp (prolog-prompt-regexp))
     (dolist (line clauses)
