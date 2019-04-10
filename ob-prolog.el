@@ -54,7 +54,7 @@
 
 (add-to-list 'org-babel-tangle-lang-exts '("prolog" . "pl"))
 
-(defvar org-babel-prolog-command (prolog-program-name)
+(defvar org-babel-prolog-command  (prolog-find-value-by-system prolog-program-name)
   "Name of the prolog executable command.")
 
 (defconst org-babel-header-args:prolog
