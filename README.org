@@ -2,3 +2,25 @@
 
 This project contains a set of functions that are need to evaluate
 prolog in org-babel.
+
+* Getting Started
+  [[https://melpa.org/#/sparql-mode][file:https://melpa.org/packages/ob-prolog-badge.svg]] [[https://stable.melpa.org/#/sparql-mode][file:https://stable.melpa.org/packages/ob-prolog-badge.svg]]
+  - Download ob-prolog and put it in a directory somewhere.
+  - Add the following to your .emacs file
+  - (or use melpa)
+
+  #+BEGIN_SRC emacs-lisp
+  (add-to-list 'load-path "/path/to/ob-prolog-dir")
+  #+END_SRC
+
+ You also need to add the next snippet or add =(prolog . t)= to
+ languages org-babel can load:
+
+  #+BEGIN_SRC emacs-lisp
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((prolog . t)))
+  #+END_SRC
+
+  You can then execute the query by pressing =C-c C-c= on the
+  source-block header.
